@@ -1,3 +1,6 @@
+import numpy as np
+from scipy.optimize import  minimize_scalar
+
 class BayesianBlock:
 
     def __init__(self, counts, lo_edges, hi_edges):
