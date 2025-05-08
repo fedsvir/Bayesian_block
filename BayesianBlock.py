@@ -1,25 +1,31 @@
-import numpy as np
-
 class BayesianBlock:
-    
+
     def __init__(self, counts, lo_edges, hi_edges):
         self._counts = np.array(counts, dtype=float)
         self._lo_edges = np.array(lo_edges)
         self._hi_edges = np.array(hi_edges)
         self._N = len(self._counts)
-        self._counts[self._counts == 0.0] = 1e-10 # to avoid log(0)
+        self._counts[self._counts == 0.0] = 1e-10  # to avoid log(0)
+        self._widths = self._hi_edges - self._lo_edges
         self._ch_points = None
-        
-        
+
     @property
     def ch_points(self):
         return self._ch_points
-    
+
+    def _f(self, a: float, cp_i: int, cp_f: int) -> float:
+        block_counts = np.sum(self._counts[cp_i:cp_f])
+        wn = (1 - a * np.arange(cp_f - cp_i)) * self._widths[cp_i:cp_f]
+        N_log_wn = self._counts[cp_i:cp_f] * np.log(wn)
+
+        return block_counts * (np.log(block_counts / np.sum(wn)) - 1) + np.sum(N_log_wn)
+
     def fitness_func(self, cp_i, cp_f, ncp_prior):
-        counts_blc = np.sum(self._counts[cp_i:cp_f])
-        width_blc = self._hi_edges[cp_f - 1] - self._lo_edges[cp_i]
-        return counts_blc * np.log(counts_blc / width_blc) - ncp_prior
-        
+        res = minimize_scalar(lambda a: -self._f(a, cp_i, cp_f), bounds=(-2, 1), method='bounded')
+        max_a = res.x
+
+        return self._f(max_a, cp_i, cp_f) - ncp_prior
+
     def run_algorithm(self, ncp_prior):
         best = np.zeros(self._N)
         last = np.zeros(self._N, dtype=int)
@@ -46,7 +52,7 @@ class BayesianBlock:
 
         self._ch_points = np.array(ch_points[::-1], dtype=int)
         return self._ch_points
-        
+
     def t_xx(self, xx, lo_edges, hi_edges, counts_signal):
         T100 = (self._ch_points[1], self._ch_points[-1] - 1)
         total_counts = np.sum(counts_signal[T100[0]:T100[1] + 1])
