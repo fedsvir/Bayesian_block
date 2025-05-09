@@ -2,45 +2,65 @@ import numpy as np
 from scipy.optimize import  minimize_scalar
 
 class BayesianBlock:
-
+    
+    A_MAX = 1
+    
     def __init__(self, counts, lo_edges, hi_edges):
         self._counts = np.array(counts, dtype=float)
+        self._counts[self._counts == 0.0] = 1e-10 # to avoid log(0)
         self._lo_edges = np.array(lo_edges)
         self._hi_edges = np.array(hi_edges)
         self._N = len(self._counts)
-        self._counts[self._counts == 0.0] = 1e-10  # to avoid log(0)
         self._widths = self._hi_edges - self._lo_edges
-        self._ch_points = None
-
+        self._ch_points = np.array([0], dtype=int)
+        
+        self.ncp_prior = self.compute_prior(self._N)
+        
     @property
     def ch_points(self):
         return self._ch_points
+        
+    def compute_prior(self, N, p0=0.01):
+        return 4 - np.log(73.53 * p0 * pow(N,-0.478))
 
-    def _f(self, a: float, cp_i: int, cp_f: int) -> float:
-        block_counts = np.sum(self._counts[cp_i:cp_f])
-        wn = (1 - a * np.arange(cp_f - cp_i)) * self._widths[cp_i:cp_f]
+    def _f(self, a, cp_i, cp_f, tot_c):
+        wn = (1 + a * np.arange(cp_f - cp_i)) * self._widths[cp_i:cp_f]
         N_log_wn = self._counts[cp_i:cp_f] * np.log(wn)
+        return tot_c*(np.log(tot_c / np.sum(wn)) - 1) + np.sum(N_log_wn)
+    
+    def linear_fit(self, cp_i, cp_f, ncp_prior):
+        tot_c = np.sum(self._counts[cp_i:cp_f])
+        
+        f = lambda a: -self._f(a, cp_i, cp_f, tot_c) 
+        res = minimize_scalar(f, bounds=(-1/self._N, self.A_MAX), method='bounded')
+        a_max = res.x
+            
+        return self._f(a_max, cp_i, cp_f, tot_c) - ncp_prior
 
-        return block_counts * (np.log(block_counts / np.sum(wn)) - 1) + np.sum(N_log_wn)
-
-    def fitness_func(self, cp_i, cp_f, ncp_prior):
-        res = minimize_scalar(lambda a: -self._f(a, cp_i, cp_f), bounds=(-2, 1), method='bounded')
-        max_a = res.x
-
-        return self._f(max_a, cp_i, cp_f) - ncp_prior
-
-    def run_algorithm(self, ncp_prior):
+    def constant_fit(self, cp_i, cp_f, ncp_prior):
+        tot_c = np.sum(self._counts[cp_i:cp_f])
+        blc_width = self._hi_edges[cp_f - 1] - self._lo_edges[cp_i]
+        return tot_c * np.log(tot_c / blc_width) - ncp_prior
+        
+    def run_algorithm(self, ncp_prior=None, mod='constant'):
+        if ncp_prior != None:
+            self.ncp_prior = ncp_prior
+        if mod == 'constant':
+            self.fitness_func = self.constant_fit
+        if mod == 'linear':
+            self.fitness_func = self.linear_fit
+        
         best = np.zeros(self._N)
         last = np.zeros(self._N, dtype=int)
 
         # the base case of an induction, i = 0 
-        best[0] = self.fitness_func(0, 1, ncp_prior)
+        best[0] = self.fitness_func(0, 1, self.ncp_prior)
         last[0] = 0
 
         for i in range(1, self._N):
             A = np.zeros(i + 1)
             for j in range(i + 1):
-                fit = self.fitness_func(j, i + 1, ncp_prior)
+                fit = self.fitness_func(j, i + 1, self.ncp_prior)
                 A[j] = fit if j == 0 else fit + best[j - 1]
             j_opt = np.argmax(A)
             best[i] = A[j_opt]
@@ -77,3 +97,4 @@ class BayesianBlock:
                 break
 
         return lo_xx, hi_xx
+        return self._ch_points
