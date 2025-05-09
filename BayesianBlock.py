@@ -97,4 +97,3 @@ class BayesianBlock:
                 break
 
         return lo_xx, hi_xx
-        return self._ch_points
