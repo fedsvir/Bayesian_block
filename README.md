@@ -20,4 +20,4 @@ BB = BayesianBlock(counts, lo_edges, hi_edges)
 ch_points = BB.run_algorithm(ncp_prior=10, mod='constant')
 ```
 ### References
-[1]  Scargle, J et al. (2013) [](https://ui.adsabs.harvard.edu/abs/2013ApJ...764..167S)
+[1] [Scargle, J et al. (2013)](https://ui.adsabs.harvard.edu/abs/2013ApJ...764..167S)
