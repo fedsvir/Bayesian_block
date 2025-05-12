@@ -19,4 +19,5 @@ hi_edges = [1, 2, 3, 4, 5, 6, 7, 8, 9]  # Upper edges of each bin
 BB = BayesianBlock(counts, lo_edges, hi_edges)
 ch_points = BB.run_algorithm(ncp_prior=10, mod='constant')
 ```
-[1] Scargle, J et al. [(2013)](https://ui.adsabs.harvard.edu/abs/2013ApJ...764..167S)
+### References
+[1]  Scargle, J et al. (2013) [](https://ui.adsabs.harvard.edu/abs/2013ApJ...764..167S)
