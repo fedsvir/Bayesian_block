@@ -8,7 +8,7 @@ et al (2013).
 
 One of the many applications is the identification 
 of signal and background regions in gamma-ray burst data.
-![image](/images/light_curve.png)
+![image](/images/lc.jpg)
 
 ### Example Code:
 ```python
