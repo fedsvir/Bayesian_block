@@ -14,7 +14,7 @@ hi_edges = [1, 2, 3, 4, 5, 6, 7, 8, 9]  # Upper edges of each bin
 
 BB = BayesianBlock(counts, lo_edges, hi_edges)
 ch_points = BB.run_algorithm(ncp_prior=1, mod='constant')
-# returnes [0, 2, 6]
+# Returns [0, 2, 6]
 # |1, 1, |5, 9, 6, 4, |1, 1, 1
 ```
 ### References
