@@ -1,24 +1,21 @@
 # Bayesian_block
-Bayesian block decomposition for time series analysis.
+This repository provides a Python implementation of the Bayesian Blocks algorithm (Scargle et al. 2013), a non-parametric method for optimal segmentation of 1D sequential data into statistically significant variable-length intervals ("blocks"). The algorithm detects change points by maximizing a fitness function and employs dynamic programming to solve both piecewise-constant and piecewise-linear models. For a brief theoretical overview, see: [outline_algorithm.pdf](outline_algorithm.pdf)
 
-Dynamic programming algorithm is used for solving
-piecewise-constant and piecewise-linear models.
-This is based on the algorith presented in Scargle
-et al (2013).
+![image](/description/image1.png)
+![image](/description/image2.png)
 
-One of the many applications is the identification 
-of signal and background regions in gamma-ray burst data.
-
-![image](/images/light_curve.png)
-
-### Example Code:
+### Toy Example:
 ```python
-counts = [1, 2, 5, 9, 6, 4, 2, 1, 1]  # Counts or signal values for each bin
+from BayesianBlock import BayesianBlock
+
+counts = [1, 1, 5, 9, 6, 4, 1, 1, 1]  # Signal values for each bin
 lo_edges = [0, 1, 2, 3, 4, 5, 6, 7, 8]  # Lower edges of each bin
 hi_edges = [1, 2, 3, 4, 5, 6, 7, 8, 9]  # Upper edges of each bin
 
 BB = BayesianBlock(counts, lo_edges, hi_edges)
-ch_points = BB.run_algorithm(ncp_prior=10, mod='constant')
+ch_points = BB.run_algorithm(ncp_prior=1, mod='constant')
+# returnes [0, 2, 6]
+# |1, 1, |5, 9, 6, 4, |1, 1, 1
 ```
 ### References
 [1] [Scargle, J et al. (2013)](https://ui.adsabs.harvard.edu/abs/2013ApJ...764..167S)
